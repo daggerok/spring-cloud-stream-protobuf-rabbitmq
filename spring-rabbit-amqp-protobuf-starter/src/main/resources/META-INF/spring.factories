@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.github.daggerok.spring.rabbit.amqp.protobuf.SpringRabbitAmqpProtobufAutoConfiguration

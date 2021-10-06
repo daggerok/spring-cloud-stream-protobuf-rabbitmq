@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.github.daggerok.protorabbit</groupId>
+        <artifactId>spring-cloud-stream-protobuf-rabbitmq</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <packaging>jar</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>rabbitmq</artifactId>
+    <name>${project.parent.artifactId}:${project.artifactId}</name>
+    <description>RabbitMQ Docker container</description>
+    <properties>
+        <docker-maven-plugin.version>0.31.0</docker-maven-plugin.version>
+        <!-- docker postgres -->
+        <rabbitmq.docker.name>rabbitmq:3.8.16-management-alpine</rabbitmq.docker.name>
+        <rabbitmq.docker.log.prefix>rabbitmq</rabbitmq.docker.log.prefix>
+        <rabbitmq.docker.ports.1>5672:5672</rabbitmq.docker.ports.1>
+        <rabbitmq.docker.ports.2>15672:15672</rabbitmq.docker.ports.2>
+        <rabbitmq.docker.env.RABBITMQ_DEFAULT_USER>guest</rabbitmq.docker.env.RABBITMQ_DEFAULT_USER>
+        <rabbitmq.docker.env.RABBITMQ_DEFAULT_PASSWORD>guest</rabbitmq.docker.env.RABBITMQ_DEFAULT_PASSWORD>
+        <rabbitmq.docker.wait.time>30000</rabbitmq.docker.wait.time>
+        <rabbitmq.docker.wait.log>completed with 4 plugins</rabbitmq.docker.wait.log>
+    </properties>
+    <build>
+        <plugins>
+            <!--
+              start rabbitmq:
+                ./mvnw -f rabbitmq docker:start
+              then do some testing and finally stop rabbitmq:
+                ./mvnw -f rabbitmq docker:stop
+            -->
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>${docker-maven-plugin.version}</version>
+                <configuration>
+                    <follow>false</follow>
+                    <verbose>true</verbose>
+                    <useColor>true</useColor>
+                    <logDate>default</logDate>
+                    <autoPull>always</autoPull>
+                    <keepRunning>false</keepRunning>
+                    <watchInterval>500</watchInterval>
+                    <allContainers>true</allContainers>
+                    <removeVolumes>true</removeVolumes>
+                    <imagePullPolicy>IfNotPresent</imagePullPolicy>
+                    <autoCreateCustomNetworks>false</autoCreateCustomNetworks>
+                    <images>
+                        <image>
+                            <external>
+                                <type>properties</type>
+                                <prefix>rabbitmq.docker</prefix>
+                            </external>
+                            <run>
+                                <restartPolicy>
+                                    <name>always</name>
+                                </restartPolicy>
+                                <ports>
+                                    <port>5432:5432</port>
+                                </ports>
+                                <wait>
+                                    <tcp>
+                                        <mode>mapped</mode>
+                                        <ports>
+                                            <port>5432</port>
+                                        </ports>
+                                    </tcp>
+                                    <time>6000</time>
+                                    <healthy>true</healthy>
+                                    <kill>500</kill>
+                                </wait>
+                            </run>
+                        </image>
+                    </images>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
