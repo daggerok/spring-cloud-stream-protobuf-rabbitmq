@@ -1,4 +1,4 @@
-# Spring cloud stream + RabbitMQ + Protobuf
+# Spring cloud stream + RabbitMQ + Protobuf [![CI](https://github.com/daggerok/spring-cloud-stream-protobuf-rabbitmq/actions/workflows/ci.yaml/badge.svg)](https://github.com/daggerok/spring-cloud-stream-protobuf-rabbitmq/actions/workflows/ci.yaml)
 This repository contains RabbitMQ Protobuf starters with its usage
 samples for `spring-rabbit` and
 `spring-cloud-starter-stream-rabbit` modules
@@ -18,13 +18,16 @@ git clone --depth=0 https://github.com/daggerok/spring-cloud-stream-protobuf-rab
 ## Integration testing
 
 ```bash
-rm -rf ~/.m2/repository/com/github/daggerok
 ./mvnw -f rabbitmq docker:start
-./mvnw clean install -DskipTests
-./mvnw -f consumer spring-boot:run # to create durable, then CTRL+C
-./mvnw -f producer spring-boot:run # then in a separate terminal:
-http :8080 message="Hello, World"  # and press CTRL+C for producer
-./mvnw -f consumer spring-boot:run # check message and press CTRL+C
+rm -rf ~/.m2/repository/com/github/daggerok
+./mvnw install -DskipTests
+./mvnw -f consumer spring-boot:start # to create durable queue
+./mvnw -f consumer spring-boot:stop  # to simulate downtime
+./mvnw -f producer spring-boot:start # and post message in a queue
+#http :8080 message="Hello, World"
+curl -sSv 0:8080 -H'Content-Type: application/json' -d'{"message": "Hello, World" }'
+./mvnw -f producer spring-boot:stop # and check logs that message has been received
+./mvnw -f consumer spring-boot:stop
 ./mvnw -f rabbitmq docker:stop docker:remove
 ```
 

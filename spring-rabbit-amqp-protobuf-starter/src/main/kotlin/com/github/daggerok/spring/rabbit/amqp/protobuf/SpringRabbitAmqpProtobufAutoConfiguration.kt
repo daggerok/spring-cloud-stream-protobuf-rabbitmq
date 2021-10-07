@@ -23,17 +23,17 @@ class SpringRabbitAmqpProtobufAutoConfiguration {
                 if (!com.google.protobuf.Message::class.java.isAssignableFrom(message.javaClass))
                     throw MessageConversionException("Message is not protobuf: $message")
                 val contentType = message.messageProperties.contentType
-                val isProtobuf = contentType.contains(protobufContentType)
-                if (!isProtobuf) throw MessageConversionException("Message content-type is not protobuf: $contentType")
+                val isProtobuf = contentType.contains(protobufMimeType.toString())
+                if (!isProtobuf) throw MessageConversionException("Message contentType is not protobuf: $contentType")
                 val result = runCatching {
-                    val protobufClassName = message.messageProperties.headers[protobufClassName] as String
+                    val protobufClassName = message.messageProperties.headers[protobufClassNameHeaderKey].toString()
                     val protobufClass = Class.forName(protobufClassName)
                     val builder = protobufBuilderOf(protobufClass)
                     builder.mergeFrom(message.body).buildPartial()
                         .apply { builder.clear() }
                 }
                 if (result.isFailure) throw IllegalArgumentException(
-                    "Could not initiate Message.Builder from $protobufClassName",
+                    "Could not initiate Message.Builder from $protobufClassNameHeaderKey header key",
                     result.exceptionOrNull(),
                 )
                 return result.getOrThrow()
@@ -45,9 +45,9 @@ class SpringRabbitAmqpProtobufAutoConfiguration {
                     throw MessageConversionException("Object is not a protobuf: $obj")
                 val protobuf = obj as com.google.protobuf.Message
                 val byteArray = protobuf.toByteArray()
-                props.headers[protobufClassName] = obj::class.java.name
-                props.contentType = protobufContentType
-                props.contentLength = byteArray.size as Long
+                props.contentType = protobufMimeType.toString()
+                props.contentLength = byteArray.size.toLong()
+                props.headers[protobufClassNameHeaderKey] = obj::class.java.name
                 return org.springframework.amqp.core.Message(byteArray, props)
                     .apply { log.info { "Convert protobuf into AMQP message: $this" } }
             }
@@ -55,22 +55,20 @@ class SpringRabbitAmqpProtobufAutoConfiguration {
     }
 
     companion object {
-        const val protobufClassName = "protobuf_class_name"
-        const val protobufContentType = "application/x-protobuf"
-        val protobufMimeType = MimeType.valueOf(protobufContentType) // unused
+        val protobufMimeType = MimeType.valueOf("application/x-protobuf")
+        const val protobufClassNameHeaderKey = "protobufClassName"
 
         private val log = logger()
         private val cache = ConcurrentReferenceHashMap<Class<*>, Method>()
 
         private fun protobufBuilderOf(type: Class<*>): com.google.protobuf.Message.Builder = run {
             val aTry = kotlin.runCatching {
-                val method = cache[type] ?: type.getMethod("newBuilder")
-                cache.putIfAbsent(type, method)
+                val method = cache.computeIfAbsent(type) { type.getMethod("newBuilder") }
                 method.invoke(type) as com.google.protobuf.Message.Builder
             }
             if (aTry.isFailure)
                 throw IllegalArgumentException(
-                    "Cannot initiate com.google.protobuf.Message.Builder from $protobufClassName",
+                    "Cannot initiate com.google.protobuf.Message.Builder from $protobufClassNameHeaderKey header key",
                     aTry.exceptionOrNull()
                 )
             aTry.getOrNull() ?: throw IllegalArgumentException("A com.google.protobuf.Message.Builder may not be null")

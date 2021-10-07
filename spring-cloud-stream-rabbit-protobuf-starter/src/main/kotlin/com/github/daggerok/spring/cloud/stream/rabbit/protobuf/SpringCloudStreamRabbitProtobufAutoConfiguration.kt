@@ -24,7 +24,7 @@ class SpringCloudStreamRabbitProtobufAutoConfiguration {
     fun protobufSpringCloudMessageConverter(): MessageConverter = object : MessageConverter {
         override fun fromMessage(message: Message<*>, targetClass: Class<*>): Any? =
             delegate.fromMessage(message, targetClass)
-                ?.apply { log.info { "Convert spring cloud message into protobuf: $this" } }
+                ?.apply { log.info { "Convert spring cloud message => protobuf: $this" } }
 
         override fun toMessage(payload: Any, headers: MessageHeaders?): Message<*>? =
             Optional
@@ -32,19 +32,18 @@ class SpringCloudStreamRabbitProtobufAutoConfiguration {
                 .map {
                     MessageBuilder
                         .fromMessage(it)
-                        .setHeader("content_type", protobufContentType)
-                        .setHeader("amqp_contentType", protobufContentType)
-                        .setHeader(protobufClassName, payload::class.java.name)
+                        .setHeader(protobufContentTypeHeaderKey, protobufMimeType.toString()) // required by spring
+                        .setHeader(protobufClassNameHeaderKey, payload::class.java.name) // required by converter logic
                         .build()
                 }
                 .orElse(null)
-                ?.apply { log.info { "Convert protobuf into spring cloud message: $this" } }
+                ?.apply { log.info { "Convert protobuf => spring cloud message: $this" } }
     }
 
     companion object {
-        const val protobufClassName = "protobuf_class_name"
-        const val protobufContentType = "application/x-protobuf"
-        val protobufMimeType = MimeType.valueOf(protobufContentType)
+        const val protobufContentTypeHeaderKey = "contentType"
+        val protobufMimeType = MimeType.valueOf("application/x-protobuf")
+        const val protobufClassNameHeaderKey = "protobufClassName"
 
         private val log = logger()
         private val cache = ConcurrentReferenceHashMap<Class<*>, Method>()
@@ -53,7 +52,7 @@ class SpringCloudStreamRabbitProtobufAutoConfiguration {
             object : AbstractMessageConverter(protobufMimeType) {
                 override fun supports(type: Class<*>): Boolean =
                     com.google.protobuf.Message::class.java.isAssignableFrom(type)
-                        .apply { log.info { "Delegate supports $type: $this" } }
+                        .apply { log.info { "Supports $type: $this" } }
 
                 override fun convertFromInternal(message: Message<*>, type: Class<*>, unused: Any?): Any? {
                     val aTry = runCatching {
@@ -63,23 +62,22 @@ class SpringCloudStreamRabbitProtobufAutoConfiguration {
                     }
                     if (aTry.isFailure) throw IllegalArgumentException(aTry.exceptionOrNull())
                     return aTry.getOrNull()
-                        ?.apply { log.info { "Delegate converter from internal $this" } }
+                        ?.apply { log.info { "Convert internal message: $message => $this" } }
                 }
 
                 override fun convertToInternal(payload: Any, headers: MessageHeaders?, unused: Any?): Any? =
                     com.google.protobuf.Message::class.java.cast(payload).toByteArray()
-                        ?.apply { log.info { "Delegate convert into internal $this" } }
+                        ?.apply { log.info { "Convert $payload => internal message: $this" } }
             }
 
         private fun protobufBuilderOf(type: Class<*>): com.google.protobuf.Message.Builder = run {
             val aTry = kotlin.runCatching {
-                val method = cache[type] ?: type.getMethod("newBuilder")
-                cache.putIfAbsent(type, method)
+                val method = cache.computeIfAbsent(type) { type.getMethod("newBuilder") }
                 method.invoke(type) as com.google.protobuf.Message.Builder
             }
             if (aTry.isFailure)
                 throw IllegalArgumentException(
-                    "Cannot initiate com.google.protobuf.Message.Builder from $protobufClassName",
+                    "Cannot initiate com.google.protobuf.Message.Builder from $protobufClassNameHeaderKey header key",
                     aTry.exceptionOrNull()
                 )
             aTry.getOrNull() ?: throw IllegalArgumentException("A com.google.protobuf.Message.Builder may not be null")

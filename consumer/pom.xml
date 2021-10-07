@@ -48,6 +48,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- needed for spring-boot:start spring-boot:stop -->
+                    <jmxPort>9002</jmxPort>
+                </configuration>
             </plugin>
         </plugins>
     </build>

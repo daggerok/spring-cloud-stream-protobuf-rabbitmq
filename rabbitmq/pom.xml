@@ -16,8 +16,16 @@
     <properties>
         <docker-maven-plugin.version>0.31.0</docker-maven-plugin.version>
         <!-- docker postgres -->
+        <!--
+        <a>
+        &lt;!&ndash;
+        &
+        <oloo/>
+        &ndash;&gt;
+        </a>
+        -->
         <rabbitmq.docker.name>rabbitmq:3.8.16-management-alpine</rabbitmq.docker.name>
-        <rabbitmq.docker.log.prefix>rabbitmq</rabbitmq.docker.log.prefix>
+        <rabbitmq.docker.log.prefix>rabbitmq:&#160;</rabbitmq.docker.log.prefix>
         <rabbitmq.docker.ports.1>5672:5672</rabbitmq.docker.ports.1>
         <rabbitmq.docker.ports.2>15672:15672</rabbitmq.docker.ports.2>
         <rabbitmq.docker.env.RABBITMQ_DEFAULT_USER>guest</rabbitmq.docker.env.RABBITMQ_DEFAULT_USER>
