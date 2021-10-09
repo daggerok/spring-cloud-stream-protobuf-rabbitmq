@@ -1,55 +1,81 @@
-# Spring cloud stream + RabbitMQ + Protobuf [![CI](https://github.com/daggerok/spring-cloud-stream-protobuf-rabbitmq/actions/workflows/ci.yaml/badge.svg)](https://github.com/daggerok/spring-cloud-stream-protobuf-rabbitmq/actions/workflows/ci.yaml)
-This repository contains RabbitMQ Protobuf starters with its usage
-samples for `spring-rabbit` and
-`spring-cloud-starter-stream-rabbit` modules
+# Spring cloud stream + RabbitMQ + Protobuf [![CI](https://github.com/daggerok/spring-cloud-stream-protobuf-rabbitmq/actions/workflows/ci.yaml/badge.svg?branch=integration-services)](https://github.com/daggerok/spring-cloud-stream-protobuf-rabbitmq/actions/workflows/ci.yaml)
+
+This repository demonstrates microservices pipelines and communications using http and amqp protocols with JSON and
+Protobuf
+
+```
+ O__
+/|   Hey, I wanna create user! 
+/ \
+     -> UserUI HTTP POST (JSON) request -> UserBackend
+        -> UserBackend send converted (Protobuf) message -> RabbitMQ exchange
+           -> RabbitMQ exchange send (Protobuf) message -> RabbitMQ UserService queue
+              -> UserService send converted received User Entity insert query -> UserStore
+
+ O__
+/|   Hey, I wanna fetch user(s) data! 
+/ \
+     -> UserUI HTTP GET (JSON) request -> UserBackend
+        -> UserBackend HTTP GET (Protobuf) request -> UserService
+           -> UserService send User fetch query -> UserStore
+        <- UserService <- User Entity from UserStore
+     <- UserBackend <- Converted HTTP (Protobuf) response from UserService
+  <- UserUI <- HTTP (JSON) resp from UserBackend
+```
 
 ## Quickstart
 
 ```bash
 git clone --depth=0 https://github.com/daggerok/spring-cloud-stream-protobuf-rabbitmq.git my-app && cd $_
+
+./mvnw -f rabbitmq docker:start
+./mvnw -f user-service spring-boot:start
+./mvnw -f user-backend spring-boot:start
+
+open http://127.0.0.1:8001
 ```
 
+## Unit testing
+
 ```bash
-./mvnw -f rabbitmq docker:start
 ./mvnw clean test
-./mvnw -f rabbitmq docker:stop docker:remove
 ```
 
-## Integration testing
+## E2E testing
 
 ```bash
+rm -rf ~/.m2/repository/microservices
+./mvnw clean install -DskipTests
 ./mvnw -f rabbitmq docker:start
-rm -rf ~/.m2/repository/com/github/daggerok
-./mvnw install -DskipTests
-./mvnw -f consumer spring-boot:start # to create durable queue
-./mvnw -f consumer spring-boot:stop  # to simulate downtime
-./mvnw -f producer spring-boot:start # and post message in a queue
-#http :8080 message="Hello, World"
-curl -sSv 0:8080 -H'Content-Type: application/json' -d'{"message": "Hello, World" }'
-./mvnw -f producer spring-boot:stop # and check logs that message has been received
-./mvnw -f consumer spring-boot:stop
+
+./mvnw -f user-service spring-boot:start
+./mvnw -f user-backend -Pe2e test
+
+./mvnw -f user-service spring-boot:stop
 ./mvnw -f rabbitmq docker:stop docker:remove
 ```
 
-<!--
+## Manual integration testing
 
-# Getting Started
+```bash
+rm -rf ~/.m2/repository/microservices
+./mvnw clean install -DskipTests
+./mvnw -f rabbitmq docker:start
 
-### Reference Documentation
+./mvnw -f user-service spring-boot:start # create durable queue
+./mvnw -f user-service spring-boot:stop  # simulate downtime
+./mvnw -f user-backend spring-boot:start # send messsage
+curl -sSv 0:8001/api/v1/users -H'Content-Type:application/json' -d'{"username":"maksimko"}'
+./mvnw -f user-service spring-boot:start # check message received
 
-For further reference, please consider the following sections:
+./mvnw -f user-backend spring-boot:stop
+./mvnw -f user-service spring-boot:stop
+./mvnw -f rabbitmq docker:stop docker:remove
+```
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.5.5/maven-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.5.5/maven-plugin/reference/html/#build-image)
-* [Spring Web](https://docs.spring.io/spring-boot/docs/2.5.5/reference/htmlsingle/#boot-features-developing-web-applications)
+## RTFM
 
-### Guides
-
-The following guides illustrate how to use some features concretely:
-
-* [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
-* [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
-* [Building REST services with Spring](https://spring.io/guides/tutorials/bookmarks/)
-
--->
+- [Vue Petite](https://github.com/vuejs/petite-vue/blob/main/examples/todomvc.html)
+- [RU / UA Roboto fonts](https://fonts.google.com/specimen/Roboto?preview.text=Almost%20before%20the%20ground.%20%D0%9E%D1%85%20%D0%B8%20%D0%B4%D0%B0!&preview.text_type=custom)
+- [Maven Unit / Integration testing](https://www.baeldung.com/maven-integration-test)
+- [Maven surefire plugin](https://maven.apache.org/surefire/maven-surefire-plugin/examples/inclusion-exclusion.html)

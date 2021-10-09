@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  user.client.autoconfigure.UserClientAutoConfiguration

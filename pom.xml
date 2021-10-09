@@ -8,27 +8,36 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <packaging>pom</packaging>
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.daggerok.protorabbit</groupId>
-    <artifactId>spring-cloud-stream-protobuf-rabbitmq</artifactId>
+    <groupId>microservices</groupId>
     <version>0.0.1-SNAPSHOT</version>
     <name>${project.artifactId}</name>
-    <description>Spring Cloud Stream Protobuf RabbitMQ apps</description>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>microservices-pipeline</artifactId>
+    <description>System of integration microservices applications</description>
     <modules>
+        <module>protobuf-starter-spring-cloud-stream</module>
+        <module>protobuf-starter-spring-rabbit</module>
+        <module>protobuf-starter-spring-web</module>
         <module>rabbitmq</module>
-        <module>spring-cloud-stream-rabbit-protobuf-starter</module>
-        <module>spring-rabbit-amqp-protobuf-starter</module>
-        <module>api</module>
-        <module>consumer</module>
-        <module>producer</module>
+        <module>user-api</module>
+        <module>user-client</module>
+        <module>user-service</module>
+        <module>user-backend</module>
     </modules>
     <properties>
         <java.version>1.8</java.version>
+        <feign.version>11.6</feign.version>
+        <mapdb.version>3.0.8</mapdb.version>
         <kotlin.version>1.5.31</kotlin.version>
         <spring-cloud.version>2020.0.4</spring-cloud.version>
         <protobuf-java.version>3.15.8</protobuf-java.version>
         <log4j-api-kotlin.version>1.0.0</log4j-api-kotlin.version>
         <protoc-jar-maven-plugin.version>3.1.0.1</protoc-jar-maven-plugin.version>
+        <spring-cloud-contract-wiremock.version>3.0.4</spring-cloud-contract-wiremock.version>
+        <!--<frontend-maven-plugin.yarnVersion>1.22.11</frontend-maven-plugin.yarnVersion>
+        <frontend-maven-plugin.nodeVersion>12.22.6</frontend-maven-plugin.nodeVersion>
+        <frontend-maven-plugin.npmVersion>7.21.0</frontend-maven-plugin.npmVersion>
+        <frontend-maven-plugin.version>1.12.0</frontend-maven-plugin.version>-->
     </properties>
     <dependencies>
         <dependency>
@@ -49,6 +58,35 @@
             <artifactId>log4j-api-kotlin</artifactId>
             <optional>true</optional>
             <scope>provided</scope>
+        </dependency>
+        <!---->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-rabbit-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream</artifactId>
+            <scope>test</scope>
+            <classifier>test-binder</classifier>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream-test-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-contract-wiremock</artifactId>
+            <version>${spring-cloud-contract-wiremock.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <dependencyManagement>
@@ -150,9 +188,8 @@
         </pluginManagement>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -173,6 +210,41 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <!-- run only unit tests by default -->
+                <configuration>
+                    <excludes>
+                        <exclude>**/*IT</exclude>
+                    </excludes>
+                    <includes>
+                        <include>**/*Test</include>
+                        <include>**/*Tests</include>
+                    </includes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>e2e</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <!-- run integration tests with e2e profile only -->
+                        <configuration>
+                            <includes>
+                                <include>**/*IT</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/*Test</exclude>
+                                <exclude>**/*Tests</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

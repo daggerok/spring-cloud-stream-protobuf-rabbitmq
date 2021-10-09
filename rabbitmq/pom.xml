@@ -3,27 +3,19 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.github.daggerok.protorabbit</groupId>
-        <artifactId>spring-cloud-stream-protobuf-rabbitmq</artifactId>
+        <groupId>microservices</groupId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
+        <artifactId>microservices-pipeline</artifactId>
     </parent>
     <packaging>jar</packaging>
-    <modelVersion>4.0.0</modelVersion>
     <artifactId>rabbitmq</artifactId>
-    <name>${project.parent.artifactId}:${project.artifactId}</name>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>microservices.docker</groupId>
+    <name>microservices:${project.artifactId}</name>
     <description>RabbitMQ Docker container</description>
     <properties>
         <docker-maven-plugin.version>0.31.0</docker-maven-plugin.version>
-        <!-- docker postgres -->
-        <!--
-        <a>
-        &lt;!&ndash;
-        &
-        <oloo/>
-        &ndash;&gt;
-        </a>
-        -->
         <rabbitmq.docker.name>rabbitmq:3.8.16-management-alpine</rabbitmq.docker.name>
         <rabbitmq.docker.log.prefix>rabbitmq:&#160;</rabbitmq.docker.log.prefix>
         <rabbitmq.docker.ports.1>5672:5672</rabbitmq.docker.ports.1>
@@ -35,12 +27,6 @@
     </properties>
     <build>
         <plugins>
-            <!--
-              start rabbitmq:
-                ./mvnw -f rabbitmq docker:start
-              then do some testing and finally stop rabbitmq:
-                ./mvnw -f rabbitmq docker:stop
-            -->
             <plugin>
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>

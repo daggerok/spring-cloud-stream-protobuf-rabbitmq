@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: user-service
+  output:
+    ansi:
+      enabled: always
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    virtual-host: /
+    username: guest
+    password: guest
+  cloud:
+    function:
+      definition: createUserEventStream
+    stream:
+      bindings:
+        createUserEventStream-in-0:
+          destination: createUserDestination
+          group: ${spring.application.name}@createUserEventStream
+          content-type: application/x-protobuf
+      default-binder: rabbit
+      rabbit:
+        bindings:
+          createUserEventStream-in-0:
+            consumer:
+              durableSubscription: true
+              missingQueuesFatal: true
+              maxConcurrency: 1
+              batchSize: 1
+              prefetch: 1
+server:
+  port: 8002

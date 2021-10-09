@@ -1,0 +1,15 @@
+debug: off
+spring:
+  output:
+    ansi:
+      enabled: always
+logging:
+  level:
+    web: debug
+    feign: debug
+user:
+  host: 127.0.0.1
+  port: ${wiremock.server.port}
+wiremock:
+  server:
+    port: ${random.int(64000,65000)}

@@ -1,0 +1,11 @@
+debug: off
+spring:
+  output:
+    ansi:
+      enabled: always
+logging:
+  level:
+    web: debug
+    feign: debug
+    org.springframework.web.HttpLogging: off
+    org.springframework.http.converter.json.MappingJackson2HttpMessageConverter: off
