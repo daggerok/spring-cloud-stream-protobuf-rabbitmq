@@ -23,10 +23,11 @@ rm -rf ~/.m2/repository/com/github/daggerok
 ./mvnw install -DskipTests
 ./mvnw -f consumer spring-boot:start # to create durable queue
 ./mvnw -f consumer spring-boot:stop  # to simulate downtime
-./mvnw -f producer spring-boot:start # and post message in a queue
+./mvnw -f producer spring-boot:start # and post message in a queue:
 #http :8080 message="Hello, World"
 curl -sSv 0:8080 -H'Content-Type: application/json' -d'{"message": "Hello, World" }'
-./mvnw -f producer spring-boot:stop # and check logs that message has been received
+./mvnw -f producer spring-boot:stop # and check logs that message has been received:
+./mvnw -f consumer spring-boot:start
 ./mvnw -f consumer spring-boot:stop
 ./mvnw -f rabbitmq docker:stop docker:remove
 ```
