@@ -64,8 +64,8 @@ jobs:
     - run: cd $GITHUB_WORKSPACE ; ./mvnw -f consumer spring-boot:stop  # to simulate downtime
     - run: cd $GITHUB_WORKSPACE ; ./mvnw -f producer spring-boot:start # and post message in a queue
     - run: cd $GITHUB_WORKSPACE ; curl -sSv 0:8080 -H'Content-Type:application/json' -d'{"message":"Hello, World"}'
-    - run: cd $GITHUB_WORKSPACE ; ./mvnw -f consumer spring-boot:start # to restore messages durably
     - run: cd $GITHUB_WORKSPACE ; ./mvnw -f producer spring-boot:stop
+    - run: cd $GITHUB_WORKSPACE ; ./mvnw -f consumer spring-boot:start # to restore messages durably
     - run: cd $GITHUB_WORKSPACE ; ./mvnw -f consumer spring-boot:stop  # check from logs that message has been received
     - run: cd $GITHUB_WORKSPACE ; ./mvnw -f rabbitmq docker:stop docker:remove
   dependency-updates:
